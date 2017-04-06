@@ -1,7 +1,7 @@
 package memberclicks
 
 import (
-	"context"
+	"golang.org/x/net/context"
 	"log"
 	"os"
 

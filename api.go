@@ -95,22 +95,6 @@ func (a *API) RefreshToken(ctx context.Context, scope string, refreshToken strin
 	return &t, nil
 }
 
-// Me returns the profile associated with the accessToken
-func (a *API) Me(ctx context.Context, accessToken string) (*Profile, error) {
-
-	var p Profile
-	req, err := http.NewRequest("GET", a.makeURL("/api/v1/profile/me"), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	if err := a.Do(ctx, req, &p); err != nil {
-		return nil, err
-	}
-	return &p, nil
-}
-
 // Post sends a POST request to the urlStr and marshals the response into result
 func (a *API) Post(ctx context.Context, urlStr string, form url.Values, result interface{}) error {
 	req, err := http.NewRequest("POST", a.makeURL(urlStr), bytes.NewBufferString(form.Encode()))

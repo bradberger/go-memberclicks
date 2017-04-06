@@ -2,9 +2,11 @@ package memberclicks
 
 import (
 	"bytes"
+	"golang.org/x/net/context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"google.golang.org/appengine/datastore"
@@ -103,4 +105,29 @@ func (p *Profile) Save() (list []datastore.Property, err error) {
 		list = append(list, datastore.Property{Name: i, Value: p.attributes[i]})
 	}
 	return
+}
+
+// Me returns the profile associated with the accessToken
+func (a *API) Me(ctx context.Context, accessToken string) (*Profile, error) {
+
+	var p Profile
+	req, err := http.NewRequest("GET", a.makeURL("/api/v1/profile/me"), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	if err := a.Do(ctx, req, &p); err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+// Profile retrieves a profile with the given id
+func (a *API) Profile(ctx context.Context, id string) (*Profile, error) {
+	var p Profile
+	if err := a.Get(ctx, "/api/v1/profile/"+id, &p); err != nil {
+		return nil, err
+	}
+	return &p, nil
 }

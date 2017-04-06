@@ -80,3 +80,12 @@ func TestProfileJSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, b, res)
 }
+
+func TestProfileAPI(t *testing.T) {
+	p, err := mc.Profile(ctx, "1002583186")
+	assert.NoError(t, err)
+	assert.Equal(t, "1002583186", p.GetID())
+
+	_, err = mc.Profile(ctx, "foobar")
+	assert.Error(t, err)
+}
