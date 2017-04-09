@@ -2,12 +2,13 @@ package memberclicks
 
 import (
 	"bytes"
-	"golang.org/x/net/context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore"
 )
@@ -51,6 +52,24 @@ func (p *Profile) ID() int64 {
 	return 0
 }
 
+// DeleteAttr deletes a given attribute
+func (p *Profile) DeleteAttr(names ...string) {
+	if p.attributes == nil {
+		return
+	}
+	for i := range names {
+		delete(p.attributes, names[i])
+	}
+}
+
+// MemberType returns the profile member type
+func (p *Profile) MemberType() string {
+	if p.attributes == nil || p.attributes["[Member Type]"] == nil {
+		return ""
+	}
+	return p.attributes["[Member Type]"].(string)
+}
+
 // GetID implements the goaedstorm.EntityID interface
 func (p *Profile) GetID() string {
 	return fmt.Sprintf("%v", p.ID())
@@ -78,6 +97,24 @@ func (p *Profile) Set(name string, val interface{}) {
 
 // MarshalJSON implements the json.Marshaler interface
 func (p *Profile) MarshalJSON() ([]byte, error) {
+
+	if id, ok := p.attributes["[Profile ID]"]; ok {
+		switch id.(type) {
+		case int64:
+		case float64:
+			p.attributes["[Profile ID]"] = int64(id.(float64))
+		}
+	}
+
+	// Normalize the key names here for easier use in javascript, etc.
+	// m := map[string]interface{}{}
+	// for k, v := range p.attributes {
+	// 	k = strings.Trim(k, " []")
+	// 	k = strings.Replace(k, " | ", "_", -1)
+	// 	k = strings.Replace(k, " ", "_", -1)
+	// 	m[k] = v
+	// }
+
 	buf := bytes.NewBuffer(nil)
 	err := json.NewEncoder(buf).Encode(p.attributes)
 	return buf.Bytes(), err

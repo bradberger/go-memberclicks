@@ -89,3 +89,18 @@ func TestProfileAPI(t *testing.T) {
 	_, err = mc.Profile(ctx, "foobar")
 	assert.Error(t, err)
 }
+
+func TestProfileDeleteAttr(t *testing.T) {
+	var p Profile
+
+	assert.NotPanics(t, func() {
+		p.DeleteAttr("foo")
+	})
+
+	p.attributes = map[string]interface{}{"foo": "bar"}
+	_, ok := p.attributes["foo"]
+	assert.True(t, ok)
+	p.DeleteAttr("foo")
+	_, ok = p.attributes["foo"]
+	assert.False(t, ok)
+}
