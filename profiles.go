@@ -19,14 +19,14 @@ type profileResp struct {
 }
 
 // Profiles returns a page of profiles
-func (a *API) Profiles(ctx context.Context, page int) ([]Profile, error) {
+func (a *API) Profiles(ctx context.Context, page, pageSize int) ([]Profile, error) {
 
 	var resp profileResp
 	if page < 1 {
 		page = 1
 	}
 
-	if err := a.Get(ctx, fmt.Sprintf("/api/v1/profile?pageNumber=%d", page), &resp); err != nil {
+	if err := a.Get(ctx, fmt.Sprintf("/api/v1/profile?pageNumber=%d&pageSize=%d", page, getPageSize(pageSize)), &resp); err != nil {
 		return nil, err
 	}
 
@@ -34,10 +34,24 @@ func (a *API) Profiles(ctx context.Context, page int) ([]Profile, error) {
 }
 
 // ProfilePageCt gets the total number of profiles
-func (a *API) ProfilePageCt(ctx context.Context) (int, error) {
+func (a *API) ProfilePageCt(ctx context.Context, pageSize int) (int, error) {
+	if pageSize < 10 {
+		pageSize = 10
+	}
 	var resp profileResp
-	if err := a.Get(ctx, "/api/v1/profile?pageNumber=1", &resp); err != nil {
+	if err := a.Get(ctx, fmt.Sprintf("/api/v1/profile?pageNumber=1&pageSize=%d", getPageSize(pageSize)), &resp); err != nil {
 		return 0, err
 	}
 	return resp.TotalPageCount, nil
+}
+
+func getPageSize(pageSize int) int {
+	switch {
+	case pageSize < 10:
+		return 10
+	case pageSize > 100:
+		return 100
+	default:
+		return pageSize
+	}
 }
