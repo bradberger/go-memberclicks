@@ -70,9 +70,14 @@ func (p *Profile) MemberType() string {
 	return p.attributes["[Member Type]"].(string)
 }
 
-// GetID implements the goaedstorm.EntityID interface
+// GetID implements the aedstorm.EntityID interface
 func (p *Profile) GetID() string {
 	return fmt.Sprintf("%v", p.ID())
+}
+
+// Entity implements the aedstorm.EntityName interface
+func (p *Profile) Entity() string {
+	return "profile"
 }
 
 // Get retrieves the profile attribute with the given name into dstVal

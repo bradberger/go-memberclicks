@@ -18,6 +18,11 @@ type profileResp struct {
 	Profiles       []Profile `json:"profiles"`
 }
 
+type profileSearchResp struct {
+	ID         string `json:"id"`
+	ExpireDate string `json:"expireDate"`
+}
+
 // Profiles returns a page of profiles
 func (a *API) Profiles(ctx context.Context, page, pageSize int) ([]Profile, error) {
 
@@ -31,6 +36,25 @@ func (a *API) Profiles(ctx context.Context, page, pageSize int) ([]Profile, erro
 	}
 
 	return resp.Profiles, nil
+}
+
+// ProfileSearch returns a profile search with the given ID.
+func (a *API) ProfileSearch(ctx context.Context, searchID string) ([]Profile, error) {
+	var resp profileResp
+	if err := a.Get(ctx, "/api/v1/profile?searchId="+searchID, &resp); err != nil {
+		return nil, err
+	}
+	return resp.Profiles, nil
+}
+
+// CreateProfileSearch creates a profile search and returns the resulting search ID.
+// Profile searches exipre every half an hour.
+func (a *API) CreateProfileSearch(ctx context.Context, params interface{}) (string, error) {
+	var resp profileSearchResp
+	if err := a.PostJSON(ctx, "/api/v1/profile/search", params, &resp); err != nil {
+		return "", err
+	}
+	return resp.ID, nil
 }
 
 // ProfilePageCt gets the total number of profiles

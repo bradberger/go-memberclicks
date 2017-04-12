@@ -29,3 +29,14 @@ func TestGetPageSize(t *testing.T) {
 	assert.Equal(t, 10, getPageSize(10))
 	assert.Equal(t, 100, getPageSize(1000))
 }
+
+func TestProfileSearch(t *testing.T) {
+
+	params := map[string]interface{}{"[Last Modified Date]": "Last 15 Minutes"}
+	searchID, err := mc.CreateProfileSearch(ctx, &params)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, searchID)
+
+	_, err = mc.ProfileSearch(ctx, searchID)
+	assert.NoError(t, err)
+}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -105,6 +106,23 @@ func (a *API) Post(ctx context.Context, urlStr string, form url.Values, result i
 	return a.Do(ctx, req, result)
 }
 
+// PostJSON sends a JSON POST request to the API with the JSON encoded data
+func (a *API) PostJSON(ctx context.Context, urlStr string, data, result interface{}) error {
+
+	buf := bytes.NewBuffer(nil)
+	buf2 := bytes.NewBuffer(nil)
+
+	if err := json.NewEncoder(buf).Encode(io.MultiWriter(buf, buf2)); err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", a.makeURL(urlStr), buf)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return a.Do(ctx, req, result)
+}
+
 // Get sends a GET request to the urlStr and marshals the response into result
 func (a *API) Get(ctx context.Context, urlStr string, result interface{}) error {
 	req, err := http.NewRequest("GET", a.makeURL(urlStr), nil)
@@ -147,7 +165,7 @@ func (a *API) Do(ctx context.Context, req *http.Request, result interface{}) err
 		return err
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode >= 400 {
 		return errors.New(string(bodyBytes))
 	}
 
