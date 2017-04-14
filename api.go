@@ -45,7 +45,6 @@ func (a *API) AuthCodeRedirect(w http.ResponseWriter, r *http.Request, scope, st
 
 // GetToken trades an auth code for an access token
 func (a *API) GetToken(ctx context.Context, authCode, scope, state, redirectURL string) (*Token, error) {
-
 	var t Token
 	form := url.Values{
 		"grant_type":   {"authorization_code"},
@@ -54,7 +53,7 @@ func (a *API) GetToken(ctx context.Context, authCode, scope, state, redirectURL 
 		"state":        {state},
 		"redirect_uri": {redirectURL},
 	}
-	if err := a.Post(ctx, fmt.Sprintf("https://%s.memberclicks.net/oauth/v1/token", a.orgID), form, &t); err != nil {
+	if err := a.Post(ctx, "/oauth/v1/token", form, &t); err != nil {
 		return nil, err
 	}
 	return &t, nil
