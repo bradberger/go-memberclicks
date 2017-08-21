@@ -4,7 +4,6 @@ package memberclicks
 
 import (
 	"net/http"
-	"time"
 
 	"golang.org/x/net/context"
 )
