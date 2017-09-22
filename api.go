@@ -38,6 +38,17 @@ func (a *API) GetAuthCodeURL(scope, state, redirectURL string) string {
 	)
 }
 
+func (a *API) GetAuthRequestURL(scope, state, redirectURL string) string {
+	return fmt.Sprintf(
+		"https://%s.memberclicks.net/oauth/v1/authorize?response_type=token&client_id=%s&scope=%s&state=%s&redirect_uri=%s",
+		a.orgID,
+		a.clientID,
+		scope,
+		state,
+		redirectURL,
+	)
+}
+
 // AuthCodeRedirect does an http.Redirect to the authcodeurl
 func (a *API) AuthCodeRedirect(w http.ResponseWriter, r *http.Request, scope, state, redirectURL string) {
 	http.Redirect(w, r, a.GetAuthCodeURL(scope, state, redirectURL), http.StatusTemporaryRedirect)
@@ -83,6 +94,27 @@ func (a *API) ClientCredentials(ctx context.Context, scope string) (*Token, erro
 		return nil, err
 	}
 	return &t, nil
+}
+
+// OwnerPassword returns a token with the owner "password" grant type
+func (a *API) OwnerPassword(ctx context.Context, username, password string) (*Token, error) {
+	var t Token
+	form := url.Values{
+		"scope":      {"read"},
+		"grant_type": {"password"},
+		"username":   {username},
+		"password":   {password},
+	}
+	if err := a.Post(ctx, "/oauth/v1/token", form, &t); err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+// CheckPassword is shorthand for OwnerPasswordGrant, without returning the token
+func (a *API) CheckPassword(ctx context.Context, username, password string) (err error) {
+	_, err = a.OwnerPassword(ctx, username, password)
+	return
 }
 
 // RefreshToken gets a new token from a refresh token

@@ -52,6 +52,20 @@ func (p *Profile) ID() int64 {
 	return 0
 }
 
+func (p *Profile) Groups() []string {
+	list := []string{}
+	grps := []interface{}{}
+	p.Get("[Group]", &grps)
+	for i := range grps {
+		list = append(list, grps[i].(string))
+	}
+	return list
+}
+
+func (p *Profile) Attributes() map[string]interface{} {
+	return p.attributes
+}
+
 // DeleteAttr deletes a given attribute
 func (p *Profile) DeleteAttr(names ...string) {
 	if p.attributes == nil {
