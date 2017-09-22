@@ -41,7 +41,7 @@ func (a *API) Profiles(ctx context.Context, page, pageSize int) ([]Profile, erro
 // ProfileSearch returns a profile search with the given ID.
 func (a *API) ProfileSearch(ctx context.Context, searchID string) ([]Profile, error) {
 	var resp profileResp
-	if err := a.Get(ctx, "/api/v1/profile?searchId="+searchID, &resp); err != nil {
+	if err := a.Get(ctx, "/api/v1/profile/search/"+searchID+"?pageSize=100", &resp); err != nil {
 		return nil, err
 	}
 	return resp.Profiles, nil

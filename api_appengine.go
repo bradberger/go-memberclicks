@@ -14,5 +14,6 @@ func (a *API) getClient(ctx context.Context) *http.Client {
 	if a.Client != nil {
 		return a.Client
 	}
+	ctx, _ = context.WithTimeout(ctx, a.getTimeout())
 	return urlfetch.Client(ctx)
 }

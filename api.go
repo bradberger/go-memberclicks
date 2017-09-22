@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 )
@@ -19,11 +20,24 @@ const (
 	ScopeRead = "read"
 )
 
+var (
+	// Timeout is the duration before HTTP requests to the API servers time out
+	Timeout = 15 * time.Second
+)
+
 // API is an MemberClicks API client
 type API struct {
 	orgID, clientID, clientSecret, accessToken string
 
-	Client *http.Client
+	Client  *http.Client
+	Timeout time.Duration
+}
+
+func (a *API) getTimeout() time.Duration {
+	if a.Timeout > 0 {
+		return a.Timeout
+	}
+	return Timeout
 }
 
 // GetAuthCodeURL returns a auth code URL for redirecting the client to authorize with MemberClicks
@@ -121,6 +135,19 @@ func (a *API) CheckPassword(ctx context.Context, username, password string) (err
 func (a *API) RefreshToken(ctx context.Context, scope string, refreshToken string) (*Token, error) {
 	var t Token
 	form := url.Values{"grant_type": {"refresh_token"}, "refresh_token": {refreshToken}}
+	if err := a.Post(ctx, "/oauth/v1/token", form, &t); err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (a *API) ResourceOwnerCredentials(ctx context.Context, username, password string) (*Token, error) {
+	var t Token
+	form := url.Values{}
+	form.Add("grant_type", "password")
+	form.Add("scope", "read")
+	form.Add("username", username)
+	form.Add("password", password)
 	if err := a.Post(ctx, "/oauth/v1/token", form, &t); err != nil {
 		return nil, err
 	}

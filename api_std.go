@@ -4,7 +4,6 @@ package memberclicks
 
 import (
 	"net/http"
-	"time"
 
 	"golang.org/x/net/context"
 )
@@ -21,5 +20,5 @@ func (a *API) getClient(ctx context.Context) *http.Client {
 	if httpClient != nil {
 		return httpClient
 	}
-	return &http.Client{Timeout: time.Second * 10}
+	return &http.Client{Timeout: a.getTimeout()}
 }
