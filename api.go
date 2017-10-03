@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
+
+	"google.golang.org/appengine/log"
 )
 
 // Scopes
@@ -31,6 +33,11 @@ type API struct {
 
 	Client  *http.Client
 	Timeout time.Duration
+
+	lastResponse *http.Response
+	lastRequest  *http.Request
+
+	sync.RWMutex
 }
 
 func (a *API) getTimeout() time.Duration {
@@ -167,13 +174,11 @@ func (a *API) Post(ctx context.Context, urlStr string, form url.Values, result i
 // PostJSON sends a JSON POST request to the API with the JSON encoded data
 func (a *API) PostJSON(ctx context.Context, urlStr string, data, result interface{}) error {
 
-	buf := bytes.NewBuffer(nil)
-	buf2 := bytes.NewBuffer(nil)
-
-	if err := json.NewEncoder(buf).Encode(io.MultiWriter(buf, buf2)); err != nil {
+	b, err := json.Marshal(data)
+	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("POST", a.makeURL(urlStr), buf)
+	req, err := http.NewRequest("POST", a.makeURL(urlStr), bytes.NewBuffer(b))
 	if err != nil {
 		return err
 	}
@@ -191,7 +196,10 @@ func (a *API) Get(ctx context.Context, urlStr string, result interface{}) error 
 }
 
 func (a *API) makeURL(urlStr string) string {
-	return fmt.Sprintf("https://%s.memberclicks.net/%s", a.orgID, strings.TrimPrefix(urlStr, "/"))
+	orgPrefix := fmt.Sprintf("https://%s.memberclicks.net", a.orgID)
+	urlStr = strings.TrimPrefix(urlStr, orgPrefix)
+	urlStr = strings.TrimPrefix(urlStr, "/")
+	return fmt.Sprintf("%s/%s", orgPrefix, urlStr)
 }
 
 // Do sends the http.Request and marshals the JSON response into result
@@ -213,6 +221,13 @@ func (a *API) Do(ctx context.Context, req *http.Request, result interface{}) err
 
 	client := a.getClient(ctx)
 	resp, err := client.Do(req)
+
+	// Store the last request/response combo
+	a.Lock()
+	a.lastRequest = req
+	a.lastResponse = resp
+	a.Unlock()
+
 	if err != nil {
 		return err
 	}
@@ -223,11 +238,30 @@ func (a *API) Do(ctx context.Context, req *http.Request, result interface{}) err
 		return err
 	}
 
+	log.Debugf(ctx, "Response: %+v", resp)
 	if resp.StatusCode >= 400 {
-		return errors.New(string(bodyBytes))
+		errStr := string(bodyBytes)
+		if errStr == "" {
+			errStr = resp.Status
+		}
+		return errors.New(errStr)
 	}
 
 	return json.Unmarshal(bodyBytes, result)
+}
+
+// LastRequest returns a copy of the last HTTP request make to the API
+func (a *API) LastRequest() *http.Request {
+	a.RLock()
+	defer a.RUnlock()
+	return &(*a.lastRequest)
+}
+
+// LastResponse returns a copy of the last HTTP request make to the API
+func (a *API) LastResponse() *http.Response {
+	a.RLock()
+	defer a.RUnlock()
+	return &(*a.lastResponse)
 }
 
 // New creates a new API client
