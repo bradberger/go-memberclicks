@@ -33,10 +33,13 @@ func TestGetPageSize(t *testing.T) {
 func TestProfileSearch(t *testing.T) {
 
 	params := map[string]interface{}{"[Last Modified Date]": "Last 15 Minutes"}
-	searchID, err := mc.CreateProfileSearch(ctx, &params)
+	search, err := mc.CreateProfileSearch(ctx, &params)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, searchID)
+	if !assert.NotNil(t, search) {
+		return
+	}
+	assert.NotEmpty(t, search.ID)
 
-	_, err = mc.ProfileSearch(ctx, searchID)
+	_, err = mc.ProfileSearch(ctx, search.ID)
 	assert.NoError(t, err)
 }
