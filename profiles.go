@@ -6,7 +6,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-type profileResp struct {
+type ProfileResp struct {
 	TotalCount     int       `json:"totalCount"`
 	TotalPageCount int       `json:"totalPageCount"`
 	PageNumber     int       `json:"pageNumber"`
@@ -29,9 +29,9 @@ type ProfileSearchResp struct {
 }
 
 // Profiles returns a page of profiles
-func (a *API) Profiles(ctx context.Context, page, pageSize int) ([]Profile, error) {
+func (a *API) Profiles(ctx context.Context, page, pageSize int) (*ProfileResp, error) {
 
-	var resp profileResp
+	var resp ProfileResp
 	if page < 1 {
 		page = 1
 	}
@@ -40,29 +40,26 @@ func (a *API) Profiles(ctx context.Context, page, pageSize int) ([]Profile, erro
 		return nil, err
 	}
 
-	return resp.Profiles, nil
+	return &resp, nil
 }
 
 // ProfileSearch returns a profile search with the given ID.
-func (a *API) ProfileSearch(ctx context.Context, searchID string) ([]Profile, error) {
-	var resp profileResp
-	urlStr := "/api/v1/profile/search/" + searchID + "?pageSize=100"
-	if true {
-		urlStr = "/api/v1/profile?searchId=" + searchID + "&pageSize=100"
-	}
+func (a *API) ProfileSearch(ctx context.Context, searchID string, pageNum int) (*ProfileResp, error) {
+	var resp ProfileResp
+	urlStr := fmt.Sprintf("/api/v1/profile?searchId=%s&pageSize=100&pageNumber=%d", searchID, pageNum)
 	if err := a.Get(ctx, urlStr, &resp); err != nil {
 		return nil, err
 	}
-	return resp.Profiles, nil
+	return &resp, nil
 }
 
 // ProfileSearch returns a profile search with the given ID.
-func (a *API) GetProfileSearch(ctx context.Context, search *ProfileSearchResp) ([]Profile, error) {
-	var resp profileResp
+func (a *API) GetProfileSearch(ctx context.Context, search *ProfileSearchResp) (*ProfileResp, error) {
+	var resp ProfileResp
 	if err := a.Get(ctx, search.ProfilesURL, &resp); err != nil {
 		return nil, err
 	}
-	return resp.Profiles, nil
+	return &resp, nil
 }
 
 // CreateProfileSearch creates a profile search and returns the resulting search ID.
@@ -80,7 +77,7 @@ func (a *API) ProfilePageCt(ctx context.Context, pageSize int) (int, error) {
 	if pageSize < 10 {
 		pageSize = 10
 	}
-	var resp profileResp
+	var resp ProfileResp
 	if err := a.Get(ctx, fmt.Sprintf("/api/v1/profile?pageNumber=1&pageSize=%d", getPageSize(pageSize)), &resp); err != nil {
 		return 0, err
 	}
