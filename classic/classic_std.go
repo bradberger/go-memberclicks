@@ -1,9 +1,16 @@
 // +build !appengine
 
-package memberclicks
+package classic
 
-import "net/http"
+import (
+	"net/http"
 
-var (
-	httpClient = http.DefaultClient
+	"golang.org/x/net/context"
 )
+
+func (c *Client) getClient(ctx context.Context) *http.Client {
+	if c.HttpClient != nil {
+		return c.HttpClient
+	}
+	return &http.Client{}
+}

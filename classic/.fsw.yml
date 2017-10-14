@@ -6,7 +6,11 @@ triggers:
   - '**/*.c'
   - '**/*.py'
   env:
-    DEBUG: "1"
+    # "2406471784", "demouser", "demopass"
+    MEMBERCLICKS_ORG_ID: "mmi"
+    MEMBERCLICKS_API_KEY: "5532722243"
+    MEMBERCLICKS_USERNAME: "ADSadmin"
+    MEMBERCLICKS_PASSWORD: "josephp@activedatasolutions.com"
   cmd: go test -v
   shell: true
   delay: 100ms
