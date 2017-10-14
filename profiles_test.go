@@ -7,10 +7,10 @@ import (
 )
 
 func TestProfiles(t *testing.T) {
-	p, err := mc.Profiles(ctx, 0, 10)
+	resp, err := mc.Profiles(ctx, 1, 10)
 	assert.NoError(t, err)
-	assert.Len(t, p, 10)
-	assert.True(t, p[0].ID() > 0)
+	assert.Len(t, resp.Profiles, 10)
+	assert.True(t, resp.Profiles[0].ID() > 0)
 }
 
 func TestProfilesErr(t *testing.T) {
@@ -40,6 +40,6 @@ func TestProfileSearch(t *testing.T) {
 	}
 	assert.NotEmpty(t, search.ID)
 
-	_, err = mc.ProfileSearch(ctx, search.ID)
+	_, err = mc.ProfileSearch(ctx, search.ID, 1)
 	assert.NoError(t, err)
 }
