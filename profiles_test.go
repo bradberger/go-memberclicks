@@ -2,6 +2,7 @@ package memberclicks
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -32,7 +33,7 @@ func TestGetPageSize(t *testing.T) {
 
 func TestProfileSearch(t *testing.T) {
 
-	params := map[string]interface{}{"[Last Modified Date]": "Last 15 Minutes"}
+	params := map[string]string{"[Last Modified Date]": time.Now().Format("01/02/2006")}
 	search, err := mc.CreateProfileSearch(ctx, &params)
 	assert.NoError(t, err)
 	if !assert.NotNil(t, search) {
