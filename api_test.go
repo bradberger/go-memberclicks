@@ -1,9 +1,10 @@
 package memberclicks
 
 import (
-	"golang.org/x/net/context"
 	"log"
 	"os"
+
+	"golang.org/x/net/context"
 
 	_ "github.com/joho/godotenv/autoload"
 )

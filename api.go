@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
-
-	"google.golang.org/appengine/log"
 )
 
 // Scopes
@@ -238,7 +236,6 @@ func (a *API) Do(ctx context.Context, req *http.Request, result interface{}) err
 		return err
 	}
 
-	log.Debugf(ctx, "Response: %+v", resp)
 	if resp.StatusCode >= 400 {
 		errStr := string(bodyBytes)
 		if errStr == "" {
