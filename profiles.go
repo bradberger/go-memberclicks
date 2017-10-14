@@ -28,28 +28,62 @@ type ProfileSearchResp struct {
 	ProfilesURL string                 `json:"profilesUrl"`
 }
 
-// Profiles returns a page of profiles
-func (a *API) Profiles(ctx context.Context, page, pageSize int) (*ProfileResp, error) {
+// Profiles returns a page of profiles. Set the pageNum to be < 1 to get all pages at the same time.
+func (a *API) Profiles(ctx context.Context, pageNum, pageSize int) (*ProfileResp, error) {
 
-	var resp ProfileResp
-	if page < 1 {
-		page = 1
+	all := pageNum < 1
+	if all {
+		pageSize = 100
+		pageNum = 1
 	}
 
-	if err := a.Get(ctx, fmt.Sprintf("/api/v1/profile?pageNumber=%d&pageSize=%d", page, getPageSize(pageSize)), &resp); err != nil {
+	var resp ProfileResp
+	if err := a.Get(ctx, fmt.Sprintf("/api/v1/profile?pageNumber=%d&pageSize=%d", pageNum, getPageSize(pageSize)), &resp); err != nil {
 		return nil, err
+	}
+
+	if all {
+		for i := 1; i < resp.TotalPageCount; i++ {
+			pg, err := a.Profiles(ctx, i+1, pageSize)
+			if err != nil {
+				return &resp, err
+			}
+			resp.Profiles = append(resp.Profiles, pg.Profiles...)
+		}
+		resp.TotalPageCount = 1
+		resp.TotalCount = len(resp.Profiles)
+		resp.Count = resp.TotalCount
+		resp.NextPageURL = ""
+		resp.LastPageURL = ""
 	}
 
 	return &resp, nil
 }
 
-// ProfileSearch returns a profile search with the given ID.
+// ProfileSearch returns a profile search with the given ID. If pageNum is less than 1, all pages of the search will be returned.
 func (a *API) ProfileSearch(ctx context.Context, searchID string, pageNum int) (*ProfileResp, error) {
+
+	all := pageNum < 1
+	if all || pageNum < 1 {
+		pageNum = 1
+	}
+
 	var resp ProfileResp
 	urlStr := fmt.Sprintf("/api/v1/profile?searchId=%s&pageSize=100&pageNumber=%d", searchID, pageNum)
 	if err := a.Get(ctx, urlStr, &resp); err != nil {
 		return nil, err
 	}
+
+	if all && resp.TotalPageCount > 1 {
+		for i := 1; i < resp.TotalPageCount; i++ {
+			pg, err := a.ProfileSearch(ctx, searchID, i+1)
+			if err != nil {
+				return &resp, err
+			}
+			resp.Profiles = append(resp.Profiles, pg.Profiles...)
+		}
+	}
+
 	return &resp, nil
 }
 
